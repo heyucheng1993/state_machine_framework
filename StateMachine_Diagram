@@ -1,0 +1,25 @@
+@startuml
+scale 800 width
+hide empty description
+
+[*] -l-> Idle 
+state CookingStage{
+  Idle --> StartCook : Start [Temperature < 100]
+  StartCook --> Heating
+  Heating --> Heating : PollStatus
+  Heating --> Boiled
+  Boiled --> Steaming
+  Steaming --> Steaming : PollStatus
+  Steaming --> KeepWarm
+}
+KeepWarm --> Completed : Cancel
+Completed -u-> Idle
+CookingStage --> Canceled : Cancel
+Canceled --> Idle
+
+Idle : entry/EntryIdle()
+Heating : exit/ExitHeating()
+Heating : entry/EntryHeating()
+Steaming : exit/ExitSteaming()
+Steaming : entry/EntrySteaming()
+@enduml
