@@ -19,8 +19,8 @@ static void StateAction_KeepWarm(SM_StateMachine *self);
 static void StartPoll(void);
 static void StopPoll(void);
 
-/* motor data */
-SM_RiceCookerStatus riceCookerStatus;
+/* rice cooker status */
+RiceCookerStatus riceCookerStatus;
 
 /* state map */
 static const SM_StateMap SM_stateMap[] = 
@@ -39,6 +39,18 @@ static const SM_StateMap SM_stateMap[] =
 /* check state map validity */
 STATIC_ASSERT((sizeof(SM_stateMap)/sizeof(SM_stateMap[0])) == STATE_MAX_STATES);
 
+/* event map */
+static const SM_EventMap SM_eventMap[] =
+{
+    /* eventId */             /* pEventEmitFunc */
+    {EVENT_START,             RiceCooker_Start   },
+    {EVENT_CANCEL,            RiceCooker_Cancel  },
+    {EVENT_POLL_COOK_STATUS,  RiceCooker_Poll    }
+};
+
+/* check event map validity */
+STATIC_ASSERT((sizeof(SM_eventMap)/sizeof(SM_eventMap[0])) == EVENT_MAX_EVENTS);
+
 /* initialize state machine object with initial state */
 SM_StateMachine SM_riceCooker = 
 { 
@@ -47,7 +59,8 @@ SM_StateMachine SM_riceCooker =
     STATE_IDLE,                                     /* newState */
     STATE_IDLE,                                     /* currentState */
     false,                                          /* eventGenerated */
-    SM_stateMap                                     /* stateMap */
+    SM_stateMap,                                    /* stateMap */
+    SM_eventMap                                     /* eventMap */
 };
 
 void RiceCooker_Start(SM_StateMachine *self)

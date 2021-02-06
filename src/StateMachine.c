@@ -85,3 +85,12 @@ void SM_ExecuteTransition(SM_StateMachine *self)
         }
     }
 }
+
+void SM_EventEmit(SM_StateMachine *self, SM_Events event)
+{
+    assert(self);
+
+    /* emit event */
+    SM_EventEmitFunc eventEmit = self->eventMap[event].pEventEmitFunc;
+    eventEmit(self);
+}

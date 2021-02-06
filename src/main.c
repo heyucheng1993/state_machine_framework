@@ -55,9 +55,9 @@ int main(void)
 
     // RiceCookerSM example
     // RiceCooker_Cancel(&SM_riceCooker);
-    RiceCooker_Start(&SM_riceCooker);
+    SM_EventEmit(&SM_riceCooker, EVENT_START);
     while (RiceCooker_IsPollActive())
-        RiceCooker_Poll(&SM_riceCooker);
+        SM_EventEmit(&SM_riceCooker, EVENT_POLL_COOK_STATUS);
 
     return 0;
 }
