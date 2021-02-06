@@ -70,9 +70,9 @@ void RiceCooker_Start(SM_StateMachine *self)
         STATE_STARTCOOK,                 /* STATE_IDLE */
         STATE_EVENT_INVALID,             /* STATE_COMPLETED */
         STATE_EVENT_INVALID,             /* STATE_CANCELED */
-        STATE_EVENT_IGNORED,             /* STATE_STARTCOOK */
+        STATE_EVENT_INVALID,             /* STATE_STARTCOOK */
         STATE_EVENT_IGNORED,             /* STATE_HEATING */
-        STATE_EVENT_IGNORED,             /* STATE_BOILED */
+        STATE_EVENT_INVALID,             /* STATE_BOILED */
         STATE_EVENT_IGNORED,             /* STATE_STEAMING */
         STATE_EVENT_IGNORED,             /* STATE_KEEPWARM */
     }; 
@@ -104,9 +104,9 @@ void RiceCooker_Poll(SM_StateMachine *self)
         STATE_EVENT_IGNORED,             /* STATE_IDLE */
         STATE_EVENT_IGNORED,             /* STATE_COMPLETED */
         STATE_EVENT_IGNORED,             /* STATE_CANCELED */
-        STATE_HEATING      ,             /* STATE_STARTCOOK */
+        STATE_EVENT_IGNORED,             /* STATE_STARTCOOK */
         STATE_HEATING,                   /* STATE_HEATING */
-        STATE_STEAMING,                  /* STATE_BOILED */
+        STATE_EVENT_IGNORED,             /* STATE_BOILED */
         STATE_STEAMING,                  /* STATE_STEAMING */
         STATE_EVENT_IGNORED,             /* STATE_KEEPWARM */
     }; 
