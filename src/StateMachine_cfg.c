@@ -1,4 +1,4 @@
-#include <util/delay.h>
+#include <avr/delay.h>
 #include "StateMachine_cfg.h"
 
 /* state machine state functions */
@@ -17,11 +17,15 @@ static void StateAction_Steaming(SM_StateMachine *self);
 static void Exit_Steaming(SM_StateMachine *self);
 static void StateAction_KeepWarm(SM_StateMachine *self);
 
+static void StartPoll(void);
+static void StopPoll(void);
+
 /* rice cooker status */
 RiceCookerStatus riceCookerStatus = 
 {
     25,     /* temprature */
     0,      /* timer */
+    false,  /* pollActive */
     '\0'    /* userCommand */
 };
 
@@ -47,7 +51,8 @@ static const SM_EventMap SM_eventMap[] =
 {
     /* eventId */             /* pEventEmitFunc */
     {EVENT_START,             RiceCooker_Start   },
-    {EVENT_CANCEL,            RiceCooker_Cancel  }
+    {EVENT_CANCEL,            RiceCooker_Cancel  },
+    {EVENT_POLL_COOK_STATUS,  RiceCooker_Poll    }
 };
 
 /* check event map validity */
@@ -99,6 +104,38 @@ void RiceCooker_Cancel(SM_StateMachine *self)
     STATIC_ASSERT((sizeof(TRANSITIONS)/sizeof(SM_States)) == STATE_MAX_STATES);
 }
 
+void RiceCooker_Poll(SM_StateMachine *self)
+{
+    static const SM_States TRANSITIONS[] = 
+    {                                    /* - Current State - */
+        STATE_EVENT_IGNORED,             /* STATE_IDLE */
+        STATE_EVENT_IGNORED,             /* STATE_COMPLETED */
+        STATE_EVENT_IGNORED,             /* STATE_CANCELED */
+        STATE_EVENT_IGNORED,             /* STATE_STARTCOOK */
+        STATE_HEATING,                   /* STATE_HEATING */
+        STATE_EVENT_IGNORED,             /* STATE_BOILED */
+        STATE_STEAMING,                  /* STATE_STEAMING */
+        STATE_EVENT_IGNORED,             /* STATE_KEEPWARM */
+    }; 
+    SM_ExternalEvent(self, TRANSITIONS[self->currentState]);
+    STATIC_ASSERT((sizeof(TRANSITIONS)/sizeof(SM_States)) == STATE_MAX_STATES);
+}
+
+static void StartPoll()
+{
+    riceCookerStatus.pollActive = true;
+}
+
+static void StopPoll()
+{
+    riceCookerStatus.pollActive = false;
+}
+
+uint8_t RiceCooker_IsPollActive() 
+{ 
+    return riceCookerStatus.pollActive;
+}
+
 static void StateAction_Idle(SM_StateMachine *self)
 {
     printf("%s StateAction_Idle\n", self->name);
@@ -107,6 +144,7 @@ static void StateAction_Idle(SM_StateMachine *self)
 static void Entry_Idle(SM_StateMachine *self)
 {
     printf("%s Entry_Idle\n", self->name);
+    StopPoll();
 }
 
 static void StateAction_Completed(SM_StateMachine *self)
@@ -118,6 +156,7 @@ static void StateAction_Completed(SM_StateMachine *self)
 static void StateAction_Canceled(SM_StateMachine *self)
 {
     printf("%s StateAction_Canceled\n", self->name);
+    StopPoll();
     SM_InternalEvent(self, STATE_IDLE);
 }
 
@@ -144,6 +183,7 @@ static uint8_t Guard_StartCook(SM_StateMachine *self)
 static void Entry_Heating(SM_StateMachine *self)
 {
     printf("%s Entry_Heating\n", self->name);
+    StartPoll();
 }
 
 static void StateAction_Heating(SM_StateMachine *self)
@@ -156,16 +196,12 @@ static void StateAction_Heating(SM_StateMachine *self)
     {
         SM_InternalEvent(self, STATE_BOILED);
     }
-    else
-    {
-        SM_InternalEvent(self, STATE_HEATING);
-    }
-    
 }
 
 static void Exit_Heating(SM_StateMachine *self)
 {
     printf("%s Exit_Heating\n", self->name);
+    StopPoll();
 }
 
 static void StateAction_Boiled(SM_StateMachine *self)
@@ -177,6 +213,7 @@ static void StateAction_Boiled(SM_StateMachine *self)
 static void Entry_Steaming(SM_StateMachine *self)
 {
     printf("%s Entry_Steaming\n", self->name);
+    StartPoll();
 }
 
 static void StateAction_Steaming(SM_StateMachine *self)
@@ -189,16 +226,12 @@ static void StateAction_Steaming(SM_StateMachine *self)
     {
         SM_InternalEvent(self, STATE_KEEPWARM);
     }
-    else
-    {
-        SM_InternalEvent(self, STATE_STEAMING);
-    }
-    
 }
 
 static void Exit_Steaming(SM_StateMachine *self)
 {
     printf("%s Exit_Steaming\n", self->name);
+    StopPoll();
 }
 
 static void StateAction_KeepWarm(SM_StateMachine *self)

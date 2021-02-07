@@ -12,6 +12,7 @@ typedef struct
 {
     int16_t temprature;
     uint16_t timer;
+    uint8_t pollActive;
     char userCommand;
 } RiceCookerStatus;
 
@@ -22,5 +23,8 @@ extern RiceCookerStatus riceCookerStatus;
 /* state machine event functions */
 void RiceCooker_Start(SM_StateMachine *self);
 void RiceCooker_Cancel(SM_StateMachine *self);
+void RiceCooker_Poll(SM_StateMachine *self);
+
+uint8_t RiceCooker_IsPollActive(void);
 
 #endif /* STATE_MACHINE_CFG_H */
