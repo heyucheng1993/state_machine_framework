@@ -90,11 +90,6 @@ int main(void)
         default:
             break;
         }
-
-        while (RiceCooker_IsPollActive())
-        {
-            SM_EventEmit(&SM_riceCooker, EVENT_POLL_COOK_STATUS);
-        }
     }
 
     return 0;

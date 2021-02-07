@@ -25,7 +25,6 @@ typedef enum
     /* user defined events */
     EVENT_START,
     EVENT_CANCEL,
-    EVENT_POLL_COOK_STATUS,
     /* DO NOT modify following enums */
     EVENT_MAX_EVENTS
 } SM_Events;
