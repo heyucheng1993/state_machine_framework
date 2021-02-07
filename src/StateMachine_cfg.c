@@ -138,7 +138,14 @@ uint8_t RiceCooker_IsPollActive()
 
 static void StateAction_Idle(SM_StateMachine *self)
 {
-    printf("%s StateAction_Idle\n", self->name);
+    printf("%s StateAction_Idle -> Temperature: %d\n", self->name, riceCookerStatus.temprature);
+    /* cool down until temperature reaches 25 */
+    _delay_ms(10);
+    if(riceCookerStatus.temprature > 25)
+    {
+        riceCookerStatus.temprature--;
+        SM_InternalEvent(self, STATE_IDLE);
+    }
 }
 
 static void Entry_Idle(SM_StateMachine *self)
@@ -190,7 +197,7 @@ static void StateAction_Heating(SM_StateMachine *self)
 {
     printf("%s StateAction_Heating -> Temperature: %d\n", self->name, riceCookerStatus.temprature);
     /* heat until temperature reaches 100 */
-    _delay_ms(1000);
+    _delay_ms(10);
     riceCookerStatus.temprature++;
     if(riceCookerStatus.temprature > 100)
     {
@@ -220,7 +227,7 @@ static void StateAction_Steaming(SM_StateMachine *self)
 {
     printf("%s StateAction_Steaming -> Timer: %d\n", self->name, riceCookerStatus.timer);
     /* steam until timer reaches 10 */
-    _delay_ms(1000);
+    _delay_ms(10);
     riceCookerStatus.timer++;
     if(riceCookerStatus.timer > 10)
     {
@@ -240,7 +247,7 @@ static void StateAction_KeepWarm(SM_StateMachine *self)
     /* keep temerature at 80 */
     if(riceCookerStatus.temprature > 80)
     {
-        _delay_ms(1000);
+        _delay_ms(10);
         riceCookerStatus.temprature--;
     }
 }
