@@ -25,6 +25,8 @@ void RiceCooker_Start(SM_StateMachine *self);
 void RiceCooker_Cancel(SM_StateMachine *self);
 void RiceCooker_Poll(SM_StateMachine *self);
 
+void StartPoll(void);
+void StopPoll(void);
 uint8_t RiceCooker_IsPollActive(void);
 
 #endif /* STATE_MACHINE_CFG_H */

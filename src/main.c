@@ -62,21 +62,8 @@ ISR(USART_RX_vect, ISR_BLOCK)
     /* recieve and write to Rx buffer */
     riceCookerStatus.userCommand = UART_Receive(&stream);
 
-    switch (riceCookerStatus.userCommand)
-    {
-    case 's':
-        SM_EventEmit(&SM_riceCooker, EVENT_START);
-        ClearUserCommand();
-        break;
-
-    case 'c':
-        SM_EventEmit(&SM_riceCooker, EVENT_CANCEL);
-        ClearUserCommand();
-        break;
-    
-    default:
-        break;
-    }
+    /* stop polling so that event from user command could be emitted */
+    StopPoll();
 }
 
 int main(void)
@@ -98,6 +85,21 @@ int main(void)
     /* RiceCooker state machine example */
     while (1)
     {
+        /* get user command */
+        switch (riceCookerStatus.userCommand)
+        {
+        case 's':
+            SM_EventEmit(&SM_riceCooker, EVENT_START);
+            break;
+
+        case 'c':
+            SM_EventEmit(&SM_riceCooker, EVENT_CANCEL);
+            break;
+        
+        default:
+            break;
+        }
+        ClearUserCommand();
 
         while (RiceCooker_IsPollActive())
         {

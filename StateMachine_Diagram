@@ -2,15 +2,17 @@
 scale 800 width
 hide empty description
 
-[*] -l-> Idle 
+[*] --> Idle 
 state CookingStage{
+  Idle --> Idle : Poll
   Idle --> StartCook : Start [Temperature < 100]
   StartCook --> Heating
-  Heating --> Heating : PollStatus
+  Heating --> Heating : Poll
   Heating --> Boiled
   Boiled --> Steaming
-  Steaming --> Steaming : PollStatus
+  Steaming --> Steaming : Poll
   Steaming --> KeepWarm
+  KeepWarm --> KeepWarm : Poll
 }
 KeepWarm --> Completed : Cancel
 Completed -u-> Idle
@@ -18,8 +20,11 @@ CookingStage --> Canceled : Cancel
 Canceled --> Idle
 
 Idle : entry/EntryIdle()
+Idle : exit/ExitIdle()
 Heating : exit/ExitHeating()
 Heating : entry/EntryHeating()
 Steaming : exit/ExitSteaming()
 Steaming : entry/EntrySteaming()
+KeepWarm: exit/ExitKeepWarm()
+KeepWarm: entry/EntryKeepWarm()
 @enduml
