@@ -1,4 +1,4 @@
-#include <avr/delay.h>
+#include <util/delay.h>
 #include "StateMachine_cfg.h"
 
 /* state machine state functions */

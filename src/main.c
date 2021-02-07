@@ -51,13 +51,33 @@ int UART_Receive(FILE *stream)
 /* prepare user-defined FILE buffer */
 FILE stream = FDEV_SETUP_STREAM(UART_Transmit, UART_Receive, _FDEV_SETUP_RW);
 
+void ClearUserCommand(void)
+{
+    riceCookerStatus.userCommand = '\0';
+}
+
 /* UART Rx interrupt */
 ISR(USART_RX_vect, ISR_BLOCK)
 {
     /* recieve and write to Rx buffer */
     riceCookerStatus.userCommand = UART_Receive(&stream);
-}
 
+    switch (riceCookerStatus.userCommand)
+    {
+    case 's':
+        SM_EventEmit(&SM_riceCooker, EVENT_START);
+        ClearUserCommand();
+        break;
+
+    case 'c':
+        SM_EventEmit(&SM_riceCooker, EVENT_CANCEL);
+        ClearUserCommand();
+        break;
+    
+    default:
+        break;
+    }
+}
 
 int main(void)
 {
@@ -78,18 +98,6 @@ int main(void)
     /* RiceCooker state machine example */
     while (1)
     {
-        switch (riceCookerStatus.userCommand)
-        {
-        case 's':
-            SM_EventEmit(&SM_riceCooker, EVENT_START);
-            break;
-
-        case 'c':
-            SM_EventEmit(&SM_riceCooker, EVENT_CANCEL);
-        
-        default:
-            break;
-        }
 
         while (RiceCooker_IsPollActive())
         {
