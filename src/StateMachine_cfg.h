@@ -13,6 +13,7 @@ typedef struct
     int16_t temprature;
     uint16_t timer;
     uint8_t pollActive;
+    char userCommand;
 } RiceCookerStatus;
 
 /* declare the state machine object*/

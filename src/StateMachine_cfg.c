@@ -1,3 +1,4 @@
+#include <avr/delay.h>
 #include "StateMachine_cfg.h"
 
 /* state machine state functions */
@@ -20,7 +21,13 @@ static void StartPoll(void);
 static void StopPoll(void);
 
 /* rice cooker status */
-RiceCookerStatus riceCookerStatus;
+RiceCookerStatus riceCookerStatus = 
+{
+    25,     /* temprature */
+    0,      /* timer */
+    false,  /* pollActive */
+    '\0'    /* userCommand */
+};
 
 /* state map */
 static const SM_StateMap SM_stateMap[] = 
@@ -137,8 +144,6 @@ static void StateAction_Idle(SM_StateMachine *self)
 static void Entry_Idle(SM_StateMachine *self)
 {
     printf("%s Entry_Idle\n", self->name);
-    riceCookerStatus.temprature = 25;
-    riceCookerStatus.timer = 0;
     StopPoll();
 }
 
@@ -151,6 +156,7 @@ static void StateAction_Completed(SM_StateMachine *self)
 static void StateAction_Canceled(SM_StateMachine *self)
 {
     printf("%s StateAction_Canceled\n", self->name);
+    StopPoll();
     SM_InternalEvent(self, STATE_IDLE);
 }
 
@@ -183,8 +189,10 @@ static void Entry_Heating(SM_StateMachine *self)
 static void StateAction_Heating(SM_StateMachine *self)
 {
     printf("%s StateAction_Heating -> Temperature: %d\n", self->name, riceCookerStatus.temprature);
-    /* heat until temperature reaches 105 */
-    if(++riceCookerStatus.temprature > 105)
+    /* heat until temperature reaches 100 */
+    _delay_ms(1000);
+    riceCookerStatus.temprature++;
+    if(riceCookerStatus.temprature > 100)
     {
         SM_InternalEvent(self, STATE_BOILED);
     }
@@ -212,7 +220,9 @@ static void StateAction_Steaming(SM_StateMachine *self)
 {
     printf("%s StateAction_Steaming -> Timer: %d\n", self->name, riceCookerStatus.timer);
     /* steam until timer reaches 10 */
-    if(++riceCookerStatus.timer > 10)
+    _delay_ms(1000);
+    riceCookerStatus.timer++;
+    if(riceCookerStatus.timer > 10)
     {
         SM_InternalEvent(self, STATE_KEEPWARM);
     }
@@ -226,5 +236,11 @@ static void Exit_Steaming(SM_StateMachine *self)
 
 static void StateAction_KeepWarm(SM_StateMachine *self)
 {
-    printf("%s Exit_KeepWarm\n", self->name);
+    printf("%s Exit_KeepWarm -> Temperature: %d\n", self->name, riceCookerStatus.temprature);
+    /* keep temerature at 80 */
+    if(riceCookerStatus.temprature > 80)
+    {
+        _delay_ms(1000);
+        riceCookerStatus.temprature--;
+    }
 }

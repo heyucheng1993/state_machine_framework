@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <avr/io.h>
 #include <avr/sfr_defs.h>
+#include <avr/interrupt.h>
 #ifndef __AVR_ATmega328P__
 /* just used for linting */
 #include <avr/iom328p.h>
@@ -35,29 +36,66 @@ int UART_Transmit(char character, FILE *stream)
 	return 0;
 }
 
+int UART_Receive(FILE *stream)
+{
+    /* wait for data to be received */
+    while (!(UCSR0A & (1 << RXC0)))
+    {
+        ;
+    }
+
+    /* get received data */
+    return UDR0;
+}
 
 /* prepare user-defined FILE buffer */
-FILE mystdout = FDEV_SETUP_STREAM(UART_Transmit, NULL, _FDEV_SETUP_WRITE);
+FILE stream = FDEV_SETUP_STREAM(UART_Transmit, UART_Receive, _FDEV_SETUP_RW);
+
+/* UART Rx interrupt */
+ISR(USART_RX_vect, ISR_BLOCK)
+{
+    /* recieve and write to Rx buffer */
+    riceCookerStatus.userCommand = UART_Receive(&stream);
+}
 
 
 int main(void)
 {
     /* UART initialization */
+    cli();
     UBRR0H = UBRR_VALUE >> 8;
     UBRR0L = UBRR_VALUE & 0xFF;
 
-    UCSR0B = (1 << RXEN0) | (1 << TXEN0);
+    /* enable Rx, Tx, Rx Interrupt */
+    UCSR0B = (1 << RXEN0) | (1 << TXEN0) | (1 << RXCIE0);
 	UCSR0C = (0 << USBS0) | (3 << UCSZ00);
 
-    /* stdout redirection */
-    stdout = &mystdout;
+    /* stdout and stdin redirection */
+    stdout = &stream;
+    stdin  = &stream;
+    sei();
+  
+    /* RiceCooker state machine example */
+    while (1)
+    {
+        switch (riceCookerStatus.userCommand)
+        {
+        case 's':
+            SM_EventEmit(&SM_riceCooker, EVENT_START);
+            break;
 
+        case 'c':
+            SM_EventEmit(&SM_riceCooker, EVENT_CANCEL);
+        
+        default:
+            break;
+        }
 
-    // RiceCookerSM example
-    // RiceCooker_Cancel(&SM_riceCooker);
-    SM_EventEmit(&SM_riceCooker, EVENT_START);
-    while (RiceCooker_IsPollActive())
-        SM_EventEmit(&SM_riceCooker, EVENT_POLL_COOK_STATUS);
+        while (RiceCooker_IsPollActive())
+        {
+            SM_EventEmit(&SM_riceCooker, EVENT_POLL_COOK_STATUS);
+        }
+    }
 
     return 0;
 }
